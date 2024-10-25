@@ -14,7 +14,13 @@ function inputFunction(e) {
 
     const value = e.target.value.trim();
 
-    
+    fetchCountries(value).then(data => {
+      if (data.length = '') {
+        country.innerHTML = '';
+      } else {
+        countryAdd(data[0]);
+      }
+    })
 }
 
 function countryAdd() {
