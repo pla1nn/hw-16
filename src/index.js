@@ -1,34 +1,56 @@
-import fetchCountries from "./js/fetchCountries";
-import debounce from "lodash.debounce";
-import {alert, error as notifyError, info as notifyInfo} from '@pnotify/core';
+import fetchCountries from './js/fetchCountries';
+import debounce from 'lodash.debounce';
+import { error as notifyError } from '@pnotify/core';
 import '@pnotify/core/dist/PNotify.css';
 
 const input = document.getElementById('input');
 const list = document.getElementById('list');
-const country = document.getElementById('country');
+const oneCountry = document.getElementById('oneCountry');
 
-input.addEventListener('input', debounce(inputFunction), 300);
+input.addEventListener('input', debounce(inputFunction, 300));
 
 function inputFunction(e) {
-    e.preventDefault();
+  const value = e.target.value.trim();
 
-    const value = e.target.value.trim();
+  if (!value) {
+    clearList();
+    return;
+  }
 
-    fetchCountries(value).then(data => {
-      if (data.length = '') {
-        country.innerHTML = '';
-      } else {
-        countryAdd(data[0]);
-      }
-    })
+  fetchCountries(value).then(data => {
+    if (data.length > 10) {
+      notifyError({
+        text: 'too many matches found, please enterr a more specific query!',
+        delay: 777,
+      });
+      clearList();
+    } else if (data.length >= 2 && data.length <= 10) {
+      addMultipleCounties(data);
+    } else if (data.length === 1) {
+      addOneCountry(data[0]);
+    }
+  });
 }
 
-function countryAdd() {
-    country.innerHTML = `<h1 class="title">${name}</h1>
-    <ul class="info_box">
-      <li class="info_item"><b>capital:</b>${capital}</li>
-      <li class="info_item"><b>population:</b>${population}</li>
-      <li class="info_item"><b>languages:</b>${languages}</li>
-    </ul>
-    <p class="flag">${flags}</p>`
+function addMultipleCounties(countries) {
+  oneCountry.innerHTML = '';
+  list.innerHTML = countries
+    .map(country => `<li>${country.name.common}</li>`)
+    .join('');
+}
+
+function addOneCountry(country) {
+  list.innerHTML = '';
+  oneCountry.innerHTML = `
+        <h2>${country.name.common}</h2>
+        <p><b>Capital:</b> ${country.capital}</p>
+        <p><b>Population:</b> ${country.population}</p>
+        <p><b>Languages:</b> ${Object.values(country.languages).join(', ')}</p>
+        <img src="${country.flags.svg}" width="200px">
+    `;
+}
+
+function clearList() {
+  list.innerHTML = '';
+  oneCountry.innerHTML = '';
 }
